@@ -18,7 +18,7 @@ const ImageUpload = ({ onUpload, initialImage }) => {
                 },
             };
 
-            const { data } = await axios.post('http://localhost:5000/api/upload', formData, config);
+            const { data } = await axios.post('https://gportfolio-2.onrender.com/api/upload', formData, config);
             setImage(data);
             onUpload(data);
             setUploading(false);
@@ -90,7 +90,7 @@ const ImageUpload = ({ onUpload, initialImage }) => {
             ) : image ? (
                 <div style={{ position: 'relative' }}>
                     <img
-                        src={`http://localhost:5000${image}`}
+                        src={`https://gportfolio-2.onrender.com${image}`}
                         alt="Uploaded"
                         style={{
                             maxHeight: '200px',
