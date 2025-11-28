@@ -1,10 +1,13 @@
 import { useState, useRef } from 'react';
-import { FaCloudUploadAlt, FaTimes, FaImage } from 'react-icons/fa';
+import { FaCloudUploadAlt, FaTimes, FaSpinner } from 'react-icons/fa';
+import { storage } from '../firebase';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import './ImageUpload.css';
 
 const ImageUpload = ({ onImageSelect, initialImage }) => {
     const [preview, setPreview] = useState(initialImage || null);
     const [dragActive, setDragActive] = useState(false);
+    const [uploading, setUploading] = useState(false);
     const inputRef = useRef(null);
 
     const handleDrag = (e) => {
@@ -33,19 +36,26 @@ const ImageUpload = ({ onImageSelect, initialImage }) => {
         }
     };
 
-    const handleFile = (file) => {
+    const handleFile = async (file) => {
         if (!file.type.startsWith('image/')) {
             alert('Please upload an image file');
             return;
         }
 
-        const reader = new FileReader();
-        reader.onloadend = () => {
-            const base64String = reader.result;
-            setPreview(base64String);
-            onImageSelect(base64String);
-        };
-        reader.readAsDataURL(file);
+        setUploading(true);
+        try {
+            const storageRef = ref(storage, `images/${Date.now()}_${file.name}`);
+            await uploadBytes(storageRef, file);
+            const downloadURL = await getDownloadURL(storageRef);
+
+            setPreview(downloadURL);
+            onImageSelect(downloadURL);
+        } catch (error) {
+            console.error("Error uploading image: ", error);
+            alert("Failed to upload image.");
+        } finally {
+            setUploading(false);
+        }
     };
 
     const removeImage = (e) => {
@@ -78,7 +88,12 @@ const ImageUpload = ({ onImageSelect, initialImage }) => {
                 accept="image/*"
             />
 
-            {preview ? (
+            {uploading ? (
+                <div className="upload-placeholder">
+                    <FaSpinner className="upload-icon spinner" />
+                    <p>Uploading...</p>
+                </div>
+            ) : preview ? (
                 <div className="image-preview">
                     <img src={preview} alt="Preview" />
                     <button className="remove-btn" onClick={removeImage}>

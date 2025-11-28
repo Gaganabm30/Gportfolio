@@ -1,7 +1,6 @@
 import { createContext, useState, useEffect, useContext } from 'react';
-import { skills as initialSkills } from '../data/skills';
-import { projects as initialProjects } from '../data/projects';
-import { achievements as initialAchievements } from '../data/achievements';
+import { db } from '../firebase';
+import { collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, query, orderBy } from 'firebase/firestore';
 
 const DataContext = createContext();
 
@@ -15,115 +14,82 @@ export const DataProvider = ({ children }) => {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        // Load from localStorage or use initial data
-        const loadData = () => {
-            const storedSkills = localStorage.getItem('skills');
-            const storedProjects = localStorage.getItem('projects');
-            const storedAchievements = localStorage.getItem('achievements');
-            const storedMessages = localStorage.getItem('messages');
+        const unsubscribeSkills = onSnapshot(collection(db, 'skills'), (snapshot) => {
+            const skillsData = snapshot.docs.map(doc => ({ ...doc.data(), _id: doc.id }));
+            setSkills(skillsData);
+        });
 
-            if (storedSkills) setSkills(JSON.parse(storedSkills));
-            else {
-                setSkills(initialSkills);
-                localStorage.setItem('skills', JSON.stringify(initialSkills));
-            }
+        const unsubscribeProjects = onSnapshot(collection(db, 'projects'), (snapshot) => {
+            const projectsData = snapshot.docs.map(doc => ({ ...doc.data(), _id: doc.id }));
+            setProjects(projectsData);
+        });
 
-            if (storedProjects) setProjects(JSON.parse(storedProjects));
-            else {
-                setProjects(initialProjects);
-                localStorage.setItem('projects', JSON.stringify(initialProjects));
-            }
+        const unsubscribeAchievements = onSnapshot(collection(db, 'achievements'), (snapshot) => {
+            const achievementsData = snapshot.docs.map(doc => ({ ...doc.data(), _id: doc.id }));
+            setAchievements(achievementsData);
+        });
 
-            if (storedAchievements) setAchievements(JSON.parse(storedAchievements));
-            else {
-                setAchievements(initialAchievements);
-                localStorage.setItem('achievements', JSON.stringify(initialAchievements));
-            }
+        const unsubscribeMessages = onSnapshot(collection(db, 'messages'), (snapshot) => {
+            const messagesData = snapshot.docs.map(doc => ({ ...doc.data(), _id: doc.id }));
+            setMessages(messagesData);
+        });
 
-            if (storedMessages) setMessages(JSON.parse(storedMessages));
-            else {
-                setMessages([]);
-                localStorage.setItem('messages', JSON.stringify([]));
-            }
-            setLoading(false);
+        setLoading(false);
+
+        return () => {
+            unsubscribeSkills();
+            unsubscribeProjects();
+            unsubscribeAchievements();
+            unsubscribeMessages();
         };
-
-        loadData();
     }, []);
 
-    // Helper to save to localStorage
-    const saveToStorage = (key, data) => {
-        localStorage.setItem(key, JSON.stringify(data));
-    };
-
     // Skills Operations
-    const addSkill = (skill) => {
-        const newSkills = [...skills, { ...skill, _id: Date.now().toString() }];
-        setSkills(newSkills);
-        saveToStorage('skills', newSkills);
+    const addSkill = async (skill) => {
+        await addDoc(collection(db, 'skills'), skill);
     };
 
-    const updateSkill = (id, updatedSkill) => {
-        const newSkills = skills.map(s => s._id === id ? { ...updatedSkill, _id: id } : s);
-        setSkills(newSkills);
-        saveToStorage('skills', newSkills);
+    const updateSkill = async (id, updatedSkill) => {
+        await updateDoc(doc(db, 'skills', id), updatedSkill);
     };
 
-    const deleteSkill = (id) => {
-        const newSkills = skills.filter(s => s._id !== id);
-        setSkills(newSkills);
-        saveToStorage('skills', newSkills);
+    const deleteSkill = async (id) => {
+        await deleteDoc(doc(db, 'skills', id));
     };
 
     // Projects Operations
-    const addProject = (project) => {
-        const newProjects = [...projects, { ...project, _id: Date.now().toString() }];
-        setProjects(newProjects);
-        saveToStorage('projects', newProjects);
+    const addProject = async (project) => {
+        await addDoc(collection(db, 'projects'), project);
     };
 
-    const updateProject = (id, updatedProject) => {
-        const newProjects = projects.map(p => p._id === id ? { ...updatedProject, _id: id } : p);
-        setProjects(newProjects);
-        saveToStorage('projects', newProjects);
+    const updateProject = async (id, updatedProject) => {
+        await updateDoc(doc(db, 'projects', id), updatedProject);
     };
 
-    const deleteProject = (id) => {
-        const newProjects = projects.filter(p => p._id !== id);
-        setProjects(newProjects);
-        saveToStorage('projects', newProjects);
+    const deleteProject = async (id) => {
+        await deleteDoc(doc(db, 'projects', id));
     };
 
     // Achievements Operations
-    const addAchievement = (achievement) => {
-        const newAchievements = [...achievements, { ...achievement, _id: Date.now().toString() }];
-        setAchievements(newAchievements);
-        saveToStorage('achievements', newAchievements);
+    const addAchievement = async (achievement) => {
+        await addDoc(collection(db, 'achievements'), achievement);
     };
 
-    const updateAchievement = (id, updatedAchievement) => {
-        const newAchievements = achievements.map(a => a._id === id ? { ...updatedAchievement, _id: id } : a);
-        setAchievements(newAchievements);
-        saveToStorage('achievements', newAchievements);
+    const updateAchievement = async (id, updatedAchievement) => {
+        await updateDoc(doc(db, 'achievements', id), updatedAchievement);
     };
 
-    const deleteAchievement = (id) => {
-        const newAchievements = achievements.filter(a => a._id !== id);
-        setAchievements(newAchievements);
-        saveToStorage('achievements', newAchievements);
+    const deleteAchievement = async (id) => {
+        await deleteDoc(doc(db, 'achievements', id));
     };
 
     // Messages Operations
-    const addMessage = (message) => {
-        const newMessages = [...messages, { ...message, _id: Date.now().toString(), date: new Date().toLocaleDateString() }];
-        setMessages(newMessages);
-        saveToStorage('messages', newMessages);
+    const addMessage = async (message) => {
+        await addDoc(collection(db, 'messages'), { ...message, date: new Date().toLocaleDateString() });
     };
 
-    const deleteMessage = (id) => {
-        const newMessages = messages.filter(m => m._id !== id);
-        setMessages(newMessages);
-        saveToStorage('messages', newMessages);
+    const deleteMessage = async (id) => {
+        await deleteDoc(doc(db, 'messages', id));
     };
 
     return (

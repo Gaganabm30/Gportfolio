@@ -19,22 +19,6 @@
     background: rgba(var(--primary-rgb), 0.1);
 }
 
-.file-input {
-    display: none;
-}
-
-.upload-placeholder {
-    text-align: center;
-    color: var(--text-secondary);
-    pointer-events: none;
-}
-
-.upload-icon {
-    font-size: 3rem;
-    margin-bottom: 1rem;
-    color: var(--primary-color);
-}
-
 .file-types {
     display: block;
     font-size: 0.8rem;
