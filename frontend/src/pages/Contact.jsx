@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { FaEnvelope, FaPhone, FaMapMarkerAlt, FaPaperPlane, FaCommentDots, FaUserEdit } from 'react-icons/fa';
-import api from '../api/axios';
 import BackgroundAnimation from '../components/BackgroundAnimation';
+import { useData } from '../context/DataContext';
 import './Contact.css';
 
 const Contact = () => {
+    const { addMessage } = useData();
     const [formData, setFormData] = useState({ name: '', email: '', message: '' });
     const [status, setStatus] = useState('');
 
@@ -15,15 +16,10 @@ const Contact = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        try {
-            await api.post('/contact', formData);
-            setStatus('Message sent successfully!');
-            setFormData({ name: '', email: '', message: '' });
-            setTimeout(() => setStatus(''), 3000);
-        } catch (error) {
-            setStatus('Failed to send message. Please try again.');
-            setTimeout(() => setStatus(''), 3000);
-        }
+        addMessage(formData);
+        setStatus('Message sent successfully!');
+        setFormData({ name: '', email: '', message: '' });
+        setTimeout(() => setStatus(''), 3000);
     };
 
     const floatingIcons = [

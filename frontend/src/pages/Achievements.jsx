@@ -1,27 +1,11 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { FaTrophy, FaStar, FaMedal, FaCrown, FaAward, FaCertificate } from 'react-icons/fa';
-import api from '../api/axios';
+import { useData } from '../context/DataContext';
 import './Achievements.css';
 
 const Achievements = () => {
-    const [achievements, setAchievements] = useState([]);
-    const [loading, setLoading] = useState(true);
-
-    useEffect(() => {
-        fetchAchievements();
-    }, []);
-
-    const fetchAchievements = async () => {
-        try {
-            const { data } = await api.get('/achievements');
-            setAchievements(data);
-            setLoading(false);
-        } catch (error) {
-            console.error('Error fetching achievements:', error);
-            setLoading(false);
-        }
-    };
+    const { achievements, loading } = useData();
 
     const floatingIcons = [
         { Icon: FaTrophy, delay: 0, position: { top: '10%', left: '5%' } },
@@ -89,7 +73,7 @@ const Achievements = () => {
                         >
                             {achievement.image && (
                                 <div className="achievement-image" style={{ transform: "translateZ(20px)" }}>
-                                    <img src={achievement.image.startsWith('http') ? achievement.image : `https://gbackend-xeaj.onrender.com${achievement.image}`} alt={achievement.title} />
+                                    <img src={achievement.image?.startsWith('http') || achievement.image?.startsWith('data:') ? achievement.image : achievement.image} alt={achievement.title} />
                                 </div>
                             )}
                             <div className="achievement-content" style={{ transform: "translateZ(30px)" }}>

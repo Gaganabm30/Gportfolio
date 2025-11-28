@@ -2,28 +2,12 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { FaCode, FaTerminal, FaLaptopCode, FaCogs, FaServer } from 'react-icons/fa';
 import { SiJavascript, SiPython, SiReact, SiHtml5, SiCss3, SiMongodb } from 'react-icons/si';
-import api from '../api/axios';
+import { useData } from '../context/DataContext';
 import BackgroundAnimation from '../components/BackgroundAnimation';
 import './Skills.css';
 
 const Skills = () => {
-    const [skills, setSkills] = useState([]);
-    const [loading, setLoading] = useState(true);
-
-    useEffect(() => {
-        fetchSkills();
-    }, []);
-
-    const fetchSkills = async () => {
-        try {
-            const { data } = await api.get('/skills');
-            setSkills(data);
-            setLoading(false);
-        } catch (error) {
-            console.error('Error fetching skills:', error);
-            setLoading(false);
-        }
-    };
+    const { skills, loading } = useData();
 
     const groupedSkills = skills.reduce((acc, skill) => {
         if (!acc[skill.category]) {

@@ -1,28 +1,12 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { FaGithub, FaExternalLinkAlt, FaProjectDiagram, FaFolderOpen, FaCodeBranch, FaLaptopCode, FaServer } from 'react-icons/fa';
-import api from '../api/axios';
+import { useData } from '../context/DataContext';
 import BackgroundAnimation from '../components/BackgroundAnimation';
 import './Projects.css';
 
 const Projects = () => {
-    const [projects, setProjects] = useState([]);
-    const [loading, setLoading] = useState(true);
-
-    useEffect(() => {
-        fetchProjects();
-    }, []);
-
-    const fetchProjects = async () => {
-        try {
-            const { data } = await api.get('/projects');
-            setProjects(data);
-            setLoading(false);
-        } catch (error) {
-            console.error('Error fetching projects:', error);
-            setLoading(false);
-        }
-    };
+    const { projects, loading } = useData();
 
     const floatingIcons = [
         { Icon: FaProjectDiagram, delay: 0, position: { top: '15%', left: '10%' } },
@@ -59,7 +43,7 @@ const Projects = () => {
                             style={{ transformStyle: "preserve-3d" }}
                         >
                             <div className="project-image" style={{ transform: "translateZ(20px)" }}>
-                                <img src={project.image.startsWith('http') ? project.image : `https://gbackend-xeaj.onrender.com${project.image}`} alt={project.title} />
+                                <img src={project.image?.startsWith('http') || project.image?.startsWith('data:') ? project.image : project.image} alt={project.title} />
                             </div>
                             <div className="project-content" style={{ transform: "translateZ(30px)" }}>
                                 <h3>{project.title}</h3>

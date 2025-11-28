@@ -1,39 +1,18 @@
-import React, { useState } from 'react';
-import axios from 'axios';
+import { useState, useRef } from 'react';
+import { FaCloudUploadAlt, FaTimes, FaImage } from 'react-icons/fa';
+import './ImageUpload.css';
 
-const ImageUpload = ({ onUpload, initialImage }) => {
-    const [image, setImage] = useState(initialImage || '');
-    const [uploading, setUploading] = useState(false);
+const ImageUpload = ({ onImageSelect, initialImage }) => {
+    const [preview, setPreview] = useState(initialImage || null);
     const [dragActive, setDragActive] = useState(false);
-
-    const uploadFileHandler = async (file) => {
-        const formData = new FormData();
-        formData.append('image', file);
-        setUploading(true);
-
-        try {
-            const config = {
-                headers: {
-                    'Content-Type': 'multipart/form-data',
-                },
-            };
-
-            const { data } = await axios.post('https://gbackend-xeaj.onrender.com/api/upload', formData, config);
-            setImage(data);
-            onUpload(data);
-            setUploading(false);
-        } catch (error) {
-            console.error(error);
-            setUploading(false);
-        }
-    };
+    const inputRef = useRef(null);
 
     const handleDrag = (e) => {
         e.preventDefault();
         e.stopPropagation();
-        if (e.type === 'dragenter' || e.type === 'dragover') {
+        if (e.type === "dragenter" || e.type === "dragover") {
             setDragActive(true);
-        } else if (e.type === 'dragleave') {
+        } else if (e.type === "dragleave") {
             setDragActive(false);
         }
     };
@@ -43,14 +22,43 @@ const ImageUpload = ({ onUpload, initialImage }) => {
         e.stopPropagation();
         setDragActive(false);
         if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-            uploadFileHandler(e.dataTransfer.files[0]);
+            handleFile(e.dataTransfer.files[0]);
         }
     };
 
     const handleChange = (e) => {
+        e.preventDefault();
         if (e.target.files && e.target.files[0]) {
-            uploadFileHandler(e.target.files[0]);
+            handleFile(e.target.files[0]);
         }
+    };
+
+    const handleFile = (file) => {
+        if (!file.type.startsWith('image/')) {
+            alert('Please upload an image file');
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onloadend = () => {
+            const base64String = reader.result;
+            setPreview(base64String);
+            onImageSelect(base64String);
+        };
+        reader.readAsDataURL(file);
+    };
+
+    const removeImage = (e) => {
+        e.stopPropagation(); // Prevent triggering click on container
+        setPreview(null);
+        onImageSelect('');
+        if (inputRef.current) {
+            inputRef.current.value = '';
+        }
+    };
+
+    const onButtonClick = () => {
+        inputRef.current.click();
     };
 
     return (
@@ -60,52 +68,28 @@ const ImageUpload = ({ onUpload, initialImage }) => {
             onDragLeave={handleDrag}
             onDragOver={handleDrag}
             onDrop={handleDrop}
-            style={{
-                border: '2px dashed var(--glass-border)',
-                borderRadius: 'var(--radius-md)',
-                padding: '2rem',
-                textAlign: 'center',
-                background: dragActive ? 'rgba(0, 240, 255, 0.1)' : 'var(--glass-bg)',
-                transition: 'all 0.3s ease',
-                cursor: 'pointer',
-                position: 'relative'
-            }}
+            onClick={onButtonClick}
         >
             <input
+                ref={inputRef}
                 type="file"
+                className="file-input"
                 onChange={handleChange}
-                style={{
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    width: '100%',
-                    height: '100%',
-                    opacity: 0,
-                    cursor: 'pointer'
-                }}
+                accept="image/*"
             />
 
-            {uploading ? (
-                <div className="text-gradient">Uploading...</div>
-            ) : image ? (
-                <div style={{ position: 'relative' }}>
-                    <img
-                        src={`https://gbackend-xeaj.onrender.com${image}`}
-                        alt="Uploaded"
-                        style={{
-                            maxHeight: '200px',
-                            margin: '0 auto',
-                            borderRadius: 'var(--radius-sm)',
-                            boxShadow: '0 4px 15px rgba(0,0,0,0.3)'
-                        }}
-                    />
-                    <p style={{ marginTop: '1rem', fontSize: '0.9rem', color: 'var(--text-muted)' }}>Click or drag to replace</p>
+            {preview ? (
+                <div className="image-preview">
+                    <img src={preview} alt="Preview" />
+                    <button className="remove-btn" onClick={removeImage}>
+                        <FaTimes />
+                    </button>
                 </div>
             ) : (
-                <div>
-                    <div style={{ fontSize: '2rem', marginBottom: '1rem' }}>📁</div>
-                    <p style={{ fontWeight: '500', marginBottom: '0.5rem' }}>Click or Drag & Drop to Upload Image</p>
-                    <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Supports JPG, PNG</p>
+                <div className="upload-placeholder">
+                    <FaCloudUploadAlt className="upload-icon" />
+                    <p>Drag & Drop or Click to Upload Image</p>
+                    <span className="file-types">Supports: JPG, PNG, GIF</span>
                 </div>
             )}
         </div>

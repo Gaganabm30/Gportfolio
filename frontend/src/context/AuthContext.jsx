@@ -1,32 +1,32 @@
-import { createContext, useState, useEffect } from 'react';
-import api from '../api/axios';
+import { createContext, useState, useContext, useEffect } from 'react';
 
 const AuthContext = createContext();
+
+export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
 
     useEffect(() => {
-        const storedUser = JSON.parse(localStorage.getItem('user'));
+        const storedUser = sessionStorage.getItem('adminUser');
         if (storedUser) {
-            setUser(storedUser);
+            setUser(JSON.parse(storedUser));
         }
     }, []);
 
-    const login = async (username, password) => {
-        try {
-            const { data } = await api.post('/auth/login', { username, password });
-            localStorage.setItem('user', JSON.stringify(data));
-            setUser(data);
+    const login = (username, password) => {
+        if (username === 'gagugagana01@gmail.com' && password === 'gagana12345') {
+            const userData = { username, role: 'admin' };
+            setUser(userData);
+            sessionStorage.setItem('adminUser', JSON.stringify(userData));
             return { success: true };
-        } catch (error) {
-            return { success: false, message: error.response?.data?.message || 'Login failed' };
         }
+        return { success: false, message: 'Invalid credentials' };
     };
 
     const logout = () => {
-        localStorage.removeItem('user');
         setUser(null);
+        sessionStorage.removeItem('adminUser');
     };
 
     return (
@@ -35,5 +35,3 @@ export const AuthProvider = ({ children }) => {
         </AuthContext.Provider>
     );
 };
-
-export default AuthContext;
